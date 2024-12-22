@@ -1,0 +1,149 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catch the Ball Game </title>
+    <title1>Made By Chetan Agarwal</title1>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"></link>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+        }
+        #gameCanvas {
+            background-color: #000;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center h-screen bg-black">
+    <div class="text-center text-white">
+        <h1 class="text-3xl font-bold mb-4">Catch the Ball Game</h1>
+        <canvas id="gameCanvas" width="400" height="600" class="border border-gray-300"></canvas>
+        <div class="mt-4">
+            <button id="startButton" class="px-4 py-2 bg-blue-500 text-white rounded">Start Game</button>
+        </div>
+        <div class="mt-4">
+            <p class="text-xl">Score: <span id="scoreDisplay">0</span></p>
+            <p class="text-xl">Missed Balls: <span id="missedBallsDisplay">0</span></p>
+        </div>
+        <div class="mt-4">
+            <h2 class="text-2xl font-bold">Top Scorers</h2>
+            <ul id="topScorersList" class="list-disc list-inside">
+                <!-- Top scorers will be listed here -->
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const startButton = document.getElementById('startButton');
+        const scoreDisplay = document.getElementById('scoreDisplay');
+        const missedBallsDisplay = document.getElementById('missedBallsDisplay');
+        const topScorersList = document.getElementById('topScorersList');
+
+        let basket = { x: canvas.width / 2 - 25, y: canvas.height - 30, width: 50, height: 20 };
+        let balls = [];
+        let score = 0;
+        let missedBalls = 0;
+        let gameInterval;
+        let ballInterval;
+        let topScorers = [];
+
+        function drawBasket() {
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(basket.x, basket.y, basket.width, basket.height);
+        }
+
+        function drawBall(ball) {
+            ctx.beginPath();
+            ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+            ctx.fillStyle = '#ff0000';
+            ctx.fill();
+            ctx.closePath();
+        }
+
+        function moveBasket(event) {
+            const key = event.key;
+            if (key === 'ArrowLeft' && basket.x > 0) {
+                basket.x -= 20;
+            } else if (key === 'ArrowRight' && basket.x < canvas.width - basket.width) {
+                basket.x += 20;
+            }
+        }
+
+        function createBall() {
+            const x = Math.random() * (canvas.width - 20) + 10;
+            const radius = 10;
+            balls.push({ x, y: 0, radius });
+        }
+
+        function updateBalls() {
+            for (let i = 0; i < balls.length; i++) {
+                balls[i].y += 2;
+                if (balls[i].y + balls[i].radius > basket.y && balls[i].x > basket.x && balls[i].x < basket.x + basket.width) {
+                    balls.splice(i, 1);
+                    score++;
+                    scoreDisplay.textContent = score;
+                } else if (balls[i].y - balls[i].radius > canvas.height) {
+                    balls.splice(i, 1);
+                    missedBalls++;
+                    missedBallsDisplay.textContent = missedBalls;
+                    if (missedBalls >= 3) {
+                        gameOver();
+                    }
+                }
+            }
+        }
+
+        function drawScore() {
+            ctx.font = '16px Arial';
+            ctx.fillStyle = '#fff';
+            ctx.fillText('Score: ' + score, 8, 20);
+        }
+
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawBasket();
+            balls.forEach(drawBall);
+            updateBalls();
+            drawScore();
+        }
+
+        function startGame() {
+            score = 0;
+            missedBalls = 0;
+            scoreDisplay.textContent = score;
+            missedBallsDisplay.textContent = missedBalls;
+            balls = [];
+            clearInterval(gameInterval);
+            clearInterval(ballInterval);
+            gameInterval = setInterval(gameLoop, 20);
+            ballInterval = setInterval(createBall, 1500);
+        }
+
+        function gameOver() {
+            clearInterval(gameInterval);
+            clearInterval(ballInterval);
+            const playerName = prompt('Game Over! Your score is: ' + score + '. Enter your name:');
+            if (playerName) {
+                topScorers.push({ name: playerName, score: score });
+                topScorers.sort((a, b) => b.score - a.score);
+                updateTopScorersList();
+            }
+        }
+
+        function updateTopScorersList() {
+            topScorersList.innerHTML = '';
+            topScorers.forEach(scorer => {
+                const li = document.createElement('li');
+                li.textContent = `${scorer.name}: ${scorer.score}`;
+                topScorersList.appendChild(li);
+            });
+        }
+
+        startButton.addEventListener('click', startGame);
+        document.addEventListener('keydown', moveBasket);
+    </script>
+</body>
+</html>
